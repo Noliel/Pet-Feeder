@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Button, Text } from 'react-native';
+import { View, Button, Text, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 const App = () => {
@@ -8,14 +8,21 @@ const App = () => {
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState(false);
 
-  const onStartDateChange = (event, selectedDate) => {
+  const onStartDateChange = (event: any, selectedDate: any) => {
     const currentDate = selectedDate || startDate;
     setShowStartDatePicker(false);
     setStartDate(currentDate);
   };
 
-  const onEndDateChange = (event, selectedDate) => {
+  const onEndDateChange = (event: any, selectedDate: any) => {
     const currentDate = selectedDate || endDate;
+
+    // Prevent selecting an end date earlier than the start date
+    if (currentDate < startDate) {
+      Alert.alert('Invalid Date', 'End date cannot be earlier than start date!');
+      return;
+    }
+
     setShowEndDatePicker(false);
     setEndDate(currentDate);
   };
