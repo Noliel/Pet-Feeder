@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Alert, TextInput } from 'react-native';
 import { Button, Card, IconButton } from 'react-native-paper';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import moment from 'moment';
@@ -10,7 +10,9 @@ const PetFeederScheduler = () => {
   const [time, setTime] = useState(new Date());
   const [showPicker, setShowPicker] = useState(false);
   const [history, setHistory] = useState([]);
+  const [foodWeight, setFoodWeight] = useState('');
 
+  
   useEffect(() => {
     const loadHistory = async () => {
       const storedHistory = await AsyncStorage.getItem('feedingHistory');
@@ -21,17 +23,21 @@ const PetFeederScheduler = () => {
     loadHistory();
   }, []);
 
+  
   useEffect(() => {
     AsyncStorage.setItem('feedingHistory', JSON.stringify(history));
   }, [history]);
 
   const handleTimeChange = (event, selectedTime) => {
     setShowPicker(false);
-    if (selectedTime) {
-      setTime(selectedTime);
-      const newHistory = [...history, selectedTime];
+    if (selectedTime && foodWeight) {
+      const newEntry = { time: selectedTime, weight: foodWeight };
+      const newHistory = [...history, newEntry];
       setHistory(newHistory);
+      setFoodWeight(''); 
       scheduleNotification(selectedTime);
+    } else {
+      Alert.alert('Error', 'Please enter the food weight before setting the time.');
     }
   };
 
@@ -68,6 +74,16 @@ const PetFeederScheduler = () => {
     <View style={styles.container}>
       <Text style={styles.title}>Schedule Pet Feeder</Text>
 
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Enter food weight (grams)"
+        keyboardType="numeric"
+        value={foodWeight}
+        onChangeText={(text) => setFoodWeight(text)}
+      />
+
+      
       <Button
         mode="contained"
         onPress={() => setShowPicker(true)}
@@ -87,17 +103,19 @@ const PetFeederScheduler = () => {
         />
       )}
 
+      
       <Text style={styles.selectedTime}>
         Selected Time: {formatTime(time)}
       </Text>
 
+      
       <ScrollView style={styles.historyContainer}>
         <Text style={styles.historyTitle}>Feeding History:</Text>
         {history.map((item, index) => (
           <Card key={index} style={styles.historyCard}>
             <Card.Content style={styles.cardContent}>
               <Text style={styles.historyText}>
-                {`Feeding ${index + 1}: ${formatTime(item)}`}
+                {`Feeding ${index + 1}: ${formatTime(item.time)} - ${item.weight}g`}
               </Text>
               <IconButton
                 icon="delete"
@@ -124,6 +142,15 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 20,
     color: '#333',
+  },
+  input: {
+    height: 40,
+    borderColor: '#ccc',
+    borderWidth: 1,
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 20,
+    backgroundColor: '#fff',
   },
   button: {
     marginBottom: 20,
